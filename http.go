@@ -17,7 +17,7 @@ import (
 type HttpHandler struct {
 }
 
-func (h HttpHandler) Zip(src *Source) (*ZipFile, error) {
+func (h HttpHandler) Zip(src *Source) (ZipReadCloser, error) {
 	client := CtxHttpClient(src)
 	path := src.Path
 	cleanFunc := func() error {

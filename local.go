@@ -17,7 +17,7 @@ import (
 type LocalHandler struct {
 }
 
-func (h LocalHandler) Zip(src *Source) (*ZipFile, error) {
+func (h LocalHandler) Zip(src *Source) (ZipReadCloser, error) {
 	path := src.Path
 	zipFile, err := ioutil.TempFile("", "uploads-zipper")
 	if err != nil {

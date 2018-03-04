@@ -29,7 +29,7 @@ func NewGitHandler() *GitHandler {
 	client.InstallProtocol("http", githttp.NewClient(customClient))
 	return &GitHandler{customClient}
 }
-func (h GitHandler) Zip(src *Source) (*ZipFile, error) {
+func (h GitHandler) Zip(src *Source) (ZipReadCloser, error) {
 	h.setHttpClient(src)
 	path := src.Path
 	tmpDir, err := ioutil.TempDir("", "git-zipper")

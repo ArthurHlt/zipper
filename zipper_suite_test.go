@@ -26,7 +26,7 @@ var filesInZip = []string{
 	"subDir/otherDir/file.txt",
 }
 
-func checkZipFile(zipFile *ZipFile, addFiles ...string) {
+func checkZipFile(zipFile ZipReadCloser, addFiles ...string) {
 	zipFileLocal, err := ioutil.TempFile("", "zip_test")
 	Expect(err).NotTo(HaveOccurred())
 	defer func() {

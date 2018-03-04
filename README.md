@@ -1,4 +1,4 @@
-# Zipper
+# Zipper [![Build Status](https://travis-ci.org/ArthurHlt/zipper.svg?branch=master)](https://travis-ci.org/ArthurHlt/zipper) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT) [![GoDoc](https://godoc.org/github.com/ArthurHlt/zipper?status.svg)](https://godoc.org/github.com/ArthurHlt/zipper)
 
 Library to create a zip file from different kind of source, this sources can be:
 - [A git repository](#git)
@@ -85,6 +85,8 @@ Zip from a `zip` (will be a full http stream in this case), `tar` or `tgz` file.
 - **Auto detection**: on an url with protocol `http` or `https` and path ending with `.zip`, `.tar`, `.tgz` or `.tar.gz`.
 - **Valid path**:
   - `http://url.com/afile.zip`
+  - `http://url.com/afile.jar`
+  - `http://url.com/afile.war`
   - `http://url.com/afile.tar`
   - `http://url.com/afile.tgz`
   - `http://url.com/afile.tar.gz`

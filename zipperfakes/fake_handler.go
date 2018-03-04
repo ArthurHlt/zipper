@@ -8,17 +8,17 @@ import (
 )
 
 type FakeHandler struct {
-	ZipStub        func(src *zipper.Source) (zip *zipper.ZipFile, err error)
+	ZipStub        func(src *zipper.Source) (zip zipper.ZipReadCloser, err error)
 	zipMutex       sync.RWMutex
 	zipArgsForCall []struct {
 		src *zipper.Source
 	}
 	zipReturns struct {
-		result1 *zipper.ZipFile
+		result1 zipper.ZipReadCloser
 		result2 error
 	}
 	zipReturnsOnCall map[int]struct {
-		result1 *zipper.ZipFile
+		result1 zipper.ZipReadCloser
 		result2 error
 	}
 	Sha1Stub        func(src *zipper.Source) (sha1 string, err error)
@@ -58,7 +58,7 @@ type FakeHandler struct {
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *FakeHandler) Zip(src *zipper.Source) (zip *zipper.ZipFile, err error) {
+func (fake *FakeHandler) Zip(src *zipper.Source) (zip zipper.ZipReadCloser, err error) {
 	fake.zipMutex.Lock()
 	ret, specificReturn := fake.zipReturnsOnCall[len(fake.zipArgsForCall)]
 	fake.zipArgsForCall = append(fake.zipArgsForCall, struct {
@@ -87,24 +87,24 @@ func (fake *FakeHandler) ZipArgsForCall(i int) *zipper.Source {
 	return fake.zipArgsForCall[i].src
 }
 
-func (fake *FakeHandler) ZipReturns(result1 *zipper.ZipFile, result2 error) {
+func (fake *FakeHandler) ZipReturns(result1 zipper.ZipReadCloser, result2 error) {
 	fake.ZipStub = nil
 	fake.zipReturns = struct {
-		result1 *zipper.ZipFile
+		result1 zipper.ZipReadCloser
 		result2 error
 	}{result1, result2}
 }
 
-func (fake *FakeHandler) ZipReturnsOnCall(i int, result1 *zipper.ZipFile, result2 error) {
+func (fake *FakeHandler) ZipReturnsOnCall(i int, result1 zipper.ZipReadCloser, result2 error) {
 	fake.ZipStub = nil
 	if fake.zipReturnsOnCall == nil {
 		fake.zipReturnsOnCall = make(map[int]struct {
-			result1 *zipper.ZipFile
+			result1 zipper.ZipReadCloser
 			result2 error
 		})
 	}
 	fake.zipReturnsOnCall[i] = struct {
-		result1 *zipper.ZipFile
+		result1 zipper.ZipReadCloser
 		result2 error
 	}{result1, result2}
 }
