@@ -23,7 +23,7 @@ func (s Session) Sha1() (string, error) {
 // Check if source signature is different from a previous signature
 // If true, it's mean than files have changed
 func (s Session) IsDiff(storedSha1 string) (bool, string, error) {
-	sha1Given, err := s.handler.Sha1(s.src)
+	sha1Given, err := s.Sha1()
 	if err != nil {
 		return true, "", err
 	}

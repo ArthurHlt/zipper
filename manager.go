@@ -19,8 +19,7 @@ type Manager struct {
 }
 
 func mustNewManager(handlers ...Handler) *Manager {
-	m := &Manager{handlers: make(map[string]Handler)}
-	err := m.AddHandlers(handlers...)
+	m, err := NewManager(handlers...)
 	if err != nil {
 		panic(err)
 	}

@@ -6,7 +6,7 @@ import (
 )
 
 const (
-	InsecureContextKey SourceContextKey = iota
+	HttpClientContextKey SourceContextKey = iota
 )
 
 type SourceContextKey int
@@ -60,14 +60,14 @@ func (s *Source) WithContext(ctx context.Context) *Source {
 // This could be use for a zip handler
 func SetCtxHttpClient(src *Source, client *http.Client) {
 	parentContext := src.Context()
-	ctxValueReq := src.WithContext(context.WithValue(parentContext, InsecureContextKey, client))
+	ctxValueReq := src.WithContext(context.WithValue(parentContext, HttpClientContextKey, client))
 	*src = *ctxValueReq
 }
 
 // Retrieve http client set in context
 // This could be use for a zip handler
 func CtxHttpClient(src *Source) *http.Client {
-	val := src.Context().Value(InsecureContextKey)
+	val := src.Context().Value(HttpClientContextKey)
 	if val == nil {
 		return nil
 	}
