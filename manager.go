@@ -46,12 +46,14 @@ func (m *Manager) SetHttpClient(httpClient *http.Client) {
 }
 
 // For default manager
+//
 // Set a custom http client for zip handlers which need it
 func SetHttpClient(httpClient *http.Client) {
 	fManager.SetHttpClient(httpClient)
 }
 
 // For default manager
+//
 // Create a session for a given path with given handler type.
 // Omitting handler type will use auto detection)
 func CreateSession(path string, handlerNames ...string) (*Session, error) {
@@ -75,6 +77,7 @@ func (m *Manager) CreateSession(path string, handlerNames ...string) (*Session, 
 }
 
 // For default manager
+//
 // Add new zip handlers to manager
 func AddHandlers(handlers ...Handler) error {
 	return fManager.AddHandlers(handlers...)
@@ -92,6 +95,7 @@ func (m *Manager) AddHandlers(handlers ...Handler) error {
 }
 
 // For default manager
+//
 // Add new zip handler to manager
 func AddHandler(handler Handler) error {
 	return fManager.AddHandler(handler)
@@ -108,6 +112,7 @@ func (m *Manager) AddHandler(handler Handler) error {
 }
 
 // For default manager
+//
 // Find zip handler by its type
 // if type is empty string this will use auto-detection
 func FindHandler(path string, handlerName string) (Handler, error) {
