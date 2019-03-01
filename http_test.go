@@ -179,7 +179,7 @@ var _ = Describe("Http", func() {
 				filesInZip = []string{"executable"}
 
 				fis := checkZipFile(zipFile)
-				Expect(fis[0].Mode()).To(Equal(os.FileMode(0766)))
+				Expect(fis[0].Mode()).To(Equal(os.FileMode(0755)))
 			})
 		})
 	})

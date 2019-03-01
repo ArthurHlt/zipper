@@ -108,9 +108,9 @@ func (h HttpHandler) createZipFile(resp *http.Response, src *Source) (ZipReadClo
 	}
 	fh.SetModTime(time.Now())
 	if h.isExecutable(src) {
-		fh.SetMode(0766)
+		fh.SetMode(0755)
 	} else {
-		fh.SetMode(0666)
+		fh.SetMode(0644)
 	}
 
 	if fh.UncompressedSize64 > ((1 << 32) - 1) {
