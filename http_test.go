@@ -73,6 +73,8 @@ var _ = Describe("Http", func() {
 			"/final.zip":    filepath.Join(workingDir, "fixtures", "applications", "final.zip"),
 			"/final.tar.gz": filepath.Join(workingDir, "fixtures", "applications", "final.tar.gz"),
 			"/final.tar":    filepath.Join(workingDir, "fixtures", "applications", "final.tar"),
+			"/text":         filepath.Join(workingDir, "fixtures", "applications", "text"),
+			"/executable":   filepath.Join(workingDir, "fixtures", "applications", "executable"),
 		}}
 		server = httptest.NewServer(servHandler)
 		httpClient = server.Client()
@@ -146,6 +148,40 @@ var _ = Describe("Http", func() {
 
 			checkZipFile(zipFile)
 		})
+		Context("when not a zip or tar or tgz", func() {
+			var filesInZipStore []string
+			BeforeEach(func() {
+				filesInZipStore = filesInZip
+			})
+			AfterEach(func() {
+				filesInZip = filesInZipStore
+			})
+
+			It("should create a zip which contain this file", func() {
+				src := NewSource(createUrl(server, "/text"))
+				SetCtxHttpClient(src, httpClient)
+				zipFile, err := handler.Zip(src)
+				Expect(err).NotTo(HaveOccurred())
+				defer zipFile.Close()
+
+				filesInZip = []string{"text"}
+
+				checkZipFile(zipFile)
+			})
+
+			It("should create a zip which contain this file and set exec permission when it's an executable", func() {
+				src := NewSource(createUrl(server, "/executable"))
+				SetCtxHttpClient(src, httpClient)
+				zipFile, err := handler.Zip(src)
+				Expect(err).NotTo(HaveOccurred())
+				defer zipFile.Close()
+
+				filesInZip = []string{"executable"}
+
+				fis := checkZipFile(zipFile)
+				Expect(fis[0].Mode()).To(Equal(os.FileMode(0766)))
+			})
+		})
 	})
 	Describe("Detect", func() {
 		It("should return true when an http(s) link and extension one of on zip, jar, war, tar or tgz file", func() {
@@ -156,9 +192,8 @@ var _ = Describe("Http", func() {
 			Expect(handler.Detect(NewSource("http://foo.com/app.tar.gz"))).Should(BeTrue(), "tar.gz")
 			Expect(handler.Detect(NewSource("http://foo.com/app.tgz"))).Should(BeTrue(), "tgz")
 		})
-		It("should return false if not an http link or not have one of valid extension", func() {
+		It("should return false if not an http link", func() {
 			Expect(handler.Detect(NewSource("/app.zip"))).Should(BeFalse(), "link")
-			Expect(handler.Detect(NewSource("http://foo.com/app.ext"))).Should(BeFalse(), "extension")
 		})
 	})
 })

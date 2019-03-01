@@ -5,6 +5,8 @@ import (
 	"archive/zip"
 	"compress/gzip"
 	"fmt"
+	"path/filepath"
+	"time"
 
 	"io"
 	"io/ioutil"
@@ -18,27 +20,11 @@ type HttpHandler struct {
 }
 
 func (h HttpHandler) Zip(src *Source) (ZipReadCloser, error) {
-	client := CtxHttpClient(src)
 	path := src.Path
 	cleanFunc := func() error {
 		return nil
 	}
-	u, _ := url.Parse(src.Path)
-	username := ""
-	password := ""
-	if u.User != nil && u.User.Username() != "" {
-		username = u.User.Username()
-		password, _ = u.User.Password()
-	}
-	u.User = nil
-	req, err := http.NewRequest("GET", u.String(), nil)
-	if err != nil {
-		return nil, err
-	}
-	if username != "" {
-		req.SetBasicAuth(username, password)
-	}
-	resp, err := client.Do(req)
+	resp, err := h.doRequest(src)
 	if err != nil {
 		return nil, err
 	}
@@ -54,7 +40,11 @@ func (h HttpHandler) Zip(src *Source) (ZipReadCloser, error) {
 		defer resp.Body.Close()
 		return h.targz2Zip(resp.Body)
 	}
-	return NewZipFile(resp.Body, resp.ContentLength, cleanFunc), nil
+	if h.isZipFile(src) {
+		return NewZipFile(resp.Body, resp.ContentLength, cleanFunc), nil
+	}
+	defer resp.Body.Close()
+	return h.createZipFile(resp, src)
 }
 func (h HttpHandler) checkRespHttpError(resp *http.Response) error {
 	if resp.StatusCode >= 200 && resp.StatusCode < 300 {
@@ -73,9 +63,104 @@ func (h HttpHandler) checkRespHttpError(resp *http.Response) error {
 		content,
 	)
 }
+
+func (h HttpHandler) isZipFile(src *Source) bool {
+	resp, err := h.doRequest(src)
+	if err != nil {
+		return IsZipFileExt(src.Path)
+	}
+
+	err = h.checkRespHttpError(resp)
+	if err != nil {
+		return IsZipFileExt(src.Path)
+	}
+	return IsZipFile(resp.Body)
+}
+
+func (h HttpHandler) isExecutable(src *Source) bool {
+	resp, err := h.doRequest(src)
+	if err != nil {
+		return false
+	}
+
+	err = h.checkRespHttpError(resp)
+	if err != nil {
+		return false
+	}
+	return IsExecutable(resp.Body)
+}
+
+func (h HttpHandler) createZipFile(resp *http.Response, src *Source) (ZipReadCloser, error) {
+	zipFile, err := ioutil.TempFile("", "downloads-zipper")
+	if err != nil {
+		return nil, err
+	}
+	cleanFunc := func() error {
+		return os.Remove(zipFile.Name())
+	}
+	zipWriter := zip.NewWriter(zipFile)
+	defer zipWriter.Close()
+
+	size := resp.ContentLength
+	fh := &zip.FileHeader{
+		Name:               filepath.Base(src.Path),
+		UncompressedSize64: uint64(size),
+	}
+	fh.SetModTime(time.Now())
+	if h.isExecutable(src) {
+		fh.SetMode(0766)
+	} else {
+		fh.SetMode(0666)
+	}
+
+	if fh.UncompressedSize64 > ((1 << 32) - 1) {
+		fh.UncompressedSize = (1 << 32) - 1
+	} else {
+		fh.UncompressedSize = uint32(fh.UncompressedSize64)
+	}
+	w, err := zipWriter.CreateHeader(fh)
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = io.Copy(w, resp.Body)
+	if err != nil {
+		return nil, err
+	}
+	zipWriter.Close()
+	zipFile.Close()
+
+	file, err := os.Open(zipFile.Name())
+	if err != nil {
+		return nil, err
+	}
+	fs, _ := file.Stat()
+	return NewZipFile(file, fs.Size(), cleanFunc), nil
+}
+
+func (h HttpHandler) doRequest(src *Source) (*http.Response, error) {
+	client := CtxHttpClient(src)
+	u, _ := url.Parse(src.Path)
+	username := ""
+	password := ""
+	if u.User != nil && u.User.Username() != "" {
+		username = u.User.Username()
+		password, _ = u.User.Password()
+	}
+	u.User = nil
+	req, err := http.NewRequest("GET", u.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+	if username != "" {
+		req.SetBasicAuth(username, password)
+	}
+	return client.Do(req)
+}
+
 func (h HttpHandler) Detect(src *Source) bool {
 	path := src.Path
-	return IsWebURL(path) && (IsZipFile(path) || IsTarFile(path) || IsTarGzFile(path))
+	return IsWebURL(path)
 }
 
 func (h HttpHandler) targz2Zip(r io.ReadCloser) (*ZipFile, error) {
@@ -85,6 +170,7 @@ func (h HttpHandler) targz2Zip(r io.ReadCloser) (*ZipFile, error) {
 	}
 	return h.tar2Zip(gzf)
 }
+
 func (h HttpHandler) tar2Zip(r io.ReadCloser) (*ZipFile, error) {
 	zipFile, err := ioutil.TempFile("", "downloads-zipper")
 	if err != nil {
@@ -106,6 +192,7 @@ func (h HttpHandler) tar2Zip(r io.ReadCloser) (*ZipFile, error) {
 	fs, _ := file.Stat()
 	return NewZipFile(file, fs.Size(), cleanFunc), nil
 }
+
 func (h HttpHandler) writeTarToZip(r io.Reader, zipFile *os.File) error {
 	zipWriter := zip.NewWriter(zipFile)
 	defer zipWriter.Close()
@@ -150,6 +237,7 @@ func (h HttpHandler) writeTarToZip(r io.Reader, zipFile *os.File) error {
 	}
 	return nil
 }
+
 func (h HttpHandler) Sha1(src *Source) (string, error) {
 	client := CtxHttpClient(src)
 	path := src.Path
@@ -168,6 +256,7 @@ func (h HttpHandler) Sha1(src *Source) (string, error) {
 	}
 	return GetSha1FromReader(resp.Body)
 }
+
 func (h HttpHandler) Name() string {
 	return "http"
 }

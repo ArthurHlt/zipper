@@ -26,7 +26,7 @@ var filesInZip = []string{
 	"subDir/otherDir/file.txt",
 }
 
-func checkZipFile(zipFile ZipReadCloser, addFiles ...string) {
+func checkZipFile(zipFile ZipReadCloser, addFiles ...string) []os.FileInfo {
 	zipFileLocal, err := ioutil.TempFile("", "zip_test")
 	Expect(err).NotTo(HaveOccurred())
 	defer func() {
@@ -43,10 +43,13 @@ func checkZipFile(zipFile ZipReadCloser, addFiles ...string) {
 	reader, err := zip.NewReader(zipFileLocal, fileStat.Size())
 	Expect(err).NotTo(HaveOccurred())
 
+	fis := make([]os.FileInfo, 0)
 	for _, file := range reader.File {
 		Expect(finalFilesInZip).To(ContainElement(file.Name))
+		fis = append(fis, file.FileInfo())
 	}
 	Expect(finalFilesInZip).To(HaveLen(len(reader.File)))
+	return fis
 }
 func TestZipper(t *testing.T) {
 	RegisterFailHandler(Fail)

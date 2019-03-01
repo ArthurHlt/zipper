@@ -31,6 +31,8 @@ func main(){
     // zipper can auto detect what you want
     s, _ = zipper.CreateSession("/a/local/dir")
     // http support zip (useful for signature), tar or tgz
+    // when not any tar, tgz or zip file will be store as it is inside a zi[
+    s, _ = zipper.CreateSession("http://user:password@url.com/anexecutable") 
     s, _ = zipper.CreateSession("http://user:password@url.com/afile.zip")
     s, _ = zipper.CreateSession("http://user:password@url.com/afile.tar")
     s, _ = zipper.CreateSession("http://user:password@url.com/afile.tar.gz")
@@ -82,8 +84,9 @@ zipper ignoring files which match pattern when zipping.
 Zip from a `zip` (will be a full http stream in this case), `tar` or `tgz` file. 
 
 - **Type Name**: `http`
-- **Auto detection**: on an url with protocol `http` or `https` and path ending with `.zip`, `.tar`, `.tgz` or `.tar.gz`.
+- **Auto detection**: on an url with protocol `http` or `https`.
 - **Valid path**:
+  - `http://url.com/anyfile`
   - `http://url.com/afile.zip`
   - `http://url.com/afile.jar`
   - `http://url.com/afile.war`
@@ -93,7 +96,10 @@ Zip from a `zip` (will be a full http stream in this case), `tar` or `tgz` file.
 - **Signature creation**: Create signature from the first 5kb on the remote file 
 (this mean that when calling sha1 this will not download the entire file).
 
-**Tips**: You can pass user and password for basic auth.
+**Tips**: 
+- You can pass user and password for basic auth.
+- Excutable file (elf - linux executable, windows executable, macho - osx executable or file containing shebang) 
+will be store with executable permission
 
 ### Git
 

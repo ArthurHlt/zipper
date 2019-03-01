@@ -192,7 +192,7 @@ func (g GitUtils) findRepo(isBare bool) (*git.Repository, error) {
 		if err == nil {
 			return repo, nil
 		}
-		if err.Error() == "reference not found" {
+		if strings.Contains(err.Error(), "couldn't find remote ref") {
 			os.RemoveAll(g.Folder)
 			os.Mkdir(g.Folder, 0777)
 			continue
