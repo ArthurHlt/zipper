@@ -8,6 +8,7 @@ require (
 	github.com/onsi/ginkgo v1.7.0
 	github.com/onsi/gomega v1.4.3
 	github.com/urfave/cli v1.20.0
+	github.com/whilp/git-urls v0.0.0-20160530060445-31bac0d230fa
 	gopkg.in/cheggaaa/pb.v1 v1.0.27
 	gopkg.in/src-d/go-git.v4 v4.10.0
 )

@@ -225,8 +225,7 @@ var _ = Describe("Files", func() {
 			})
 
 			AfterEach(func() {
-				err := os.RemoveAll(tmpDir)
-				Expect(err).NotTo(HaveOccurred())
+				os.RemoveAll(tmpDir)
 			})
 
 			Context("when the untraversable dir is .cfignored", func() {

@@ -106,9 +106,10 @@ will be store with executable permission
 Zip from a git repository
 
 - **Type Name**: `local`
-- **Auto detection**: on an url with protocol `http` or `https` and path ending with `.git`
+- **Auto detection**: on an url with protocol `http`, `https` or `ssh` and path ending with `.git`
 - **Valid path**:
   - `http://github.com/ArthurHlt/zipper.git`
+  - `ssh://git@github.com:ArthurHlt/zipper-fixture.git`
   - `http://github.com/ArthurHlt/zipper.git#branch`
   - `http://github.com/ArthurHlt/zipper.git#tag`
   - `http://github.com/ArthurHlt/zipper.git#commit`

@@ -2,11 +2,13 @@ package zipper
 
 import (
 	"fmt"
+	"github.com/whilp/git-urls"
 	"gopkg.in/src-d/go-git.v4"
 	"gopkg.in/src-d/go-git.v4/plumbing"
 	"gopkg.in/src-d/go-git.v4/plumbing/transport"
 	"gopkg.in/src-d/go-git.v4/plumbing/transport/client"
 	githttp "gopkg.in/src-d/go-git.v4/plumbing/transport/http"
+	"gopkg.in/src-d/go-git.v4/plumbing/transport/ssh"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -59,20 +61,18 @@ func (h GitHandler) Zip(src *Source) (ZipReadCloser, error) {
 	return NewZipFile(localFh, localFh.Size(), cleanFunc), nil
 }
 func (h GitHandler) makeGitUtils(tmpDir, path string) *GitUtils {
-	u, err := url.Parse(path)
+	u, err := giturls.Parse(path)
 	if err != nil {
-		u, _ = url.Parse("ssh://" + path)
+		u, _ = giturls.Parse("ssh://" + path)
 	}
 	refName := "master"
 	if u.Fragment != "" {
 		refName = u.Fragment
 		u.Fragment = ""
 	}
-	var authMethod transport.AuthMethod
-	if u.User != nil && IsWebURL(path) {
-		password, _ := u.User.Password()
-		authMethod = &githttp.BasicAuth{u.User.Username(), password}
-		u.User = nil
+	authMethod, _ := createGitAuthMethod(u)
+	if u.Scheme == "ssh" {
+		u.Scheme = ""
 	}
 	gitUtils := &GitUtils{
 		Url:        u.String(),
@@ -95,11 +95,11 @@ func (h GitHandler) Sha1(src *Source) (string, error) {
 }
 func (h GitHandler) Detect(src *Source) bool {
 	path := src.Path
-	if !IsWebURL(path) {
+	u, err := giturls.Parse(path)
+	if err != nil {
 		return false
 	}
-	u, err := url.Parse(path)
-	if err != nil {
+	if !IsWebURL(path) && u.Scheme != "ssh" {
 		return false
 	}
 	return HasExtFile(u.Path, ".git")
@@ -120,6 +120,20 @@ type GitUtils struct {
 }
 
 var refTypes []string = []string{"heads", "tags"}
+
+func createGitAuthMethod(uri *url.URL) (transport.AuthMethod, error) {
+	if uri.Scheme == "ssh" {
+		return ssh.NewSSHAgentAuth(uri.User.Username())
+	}
+	if uri.User == nil || uri.User.Username() == "" {
+		return nil, nil
+	}
+	password, _ := uri.User.Password()
+	return &githttp.BasicAuth{
+		Username: uri.User.Username(),
+		Password: password,
+	}, nil
+}
 
 func (g GitUtils) Clone() error {
 	_, err := g.findRepo(false)
