@@ -2,10 +2,10 @@ package zipper_test
 
 import (
 	. "github.com/ArthurHlt/zipper"
-
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"net/http"
+	"os"
 )
 
 const (
@@ -104,6 +104,11 @@ var _ = Describe("Git", func() {
 			})
 		})
 		Context("When is ssh source url", func() {
+			BeforeEach(func() {
+				if os.Getenv("TRAVIS") != "" {
+					Skip("This can run only locally with github ssh key")
+				}
+			})
 			It("should create zip file", func() {
 				src := NewSource(fixtureRepoSsh)
 				SetCtxHttpClient(src, http.DefaultClient)
