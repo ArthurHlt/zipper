@@ -76,7 +76,7 @@ Zip from a local directory
   - `/path/to/a/folder`
 - **Signature creation**: Create signature from the first 5kb of the final zip file.
   
-**Tips**: Creating a `.cfignore` or/and a `.zipignore` in `.gitignore` style will make 
+**Tips**: Creating a `.cfignore`, `.zipignore` or/and `.cloudignore` in `.gitignore` style will make 
 zipper ignoring files which match pattern when zipping. 
 
 ### Http

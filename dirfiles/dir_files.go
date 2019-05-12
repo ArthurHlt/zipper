@@ -12,8 +12,9 @@ import (
 	"path/filepath"
 	"runtime"
 
-	"code.cloudfoundry.org/gofileutils/fileutils"
 	"strings"
+
+	"code.cloudfoundry.org/gofileutils/fileutils"
 )
 
 const windowsPathPrefix = `\\?\`
@@ -211,6 +212,7 @@ func (appfiles DirFiles) WalkAppFiles(dir string, onEachFile func(string, string
 
 var ignorerFiles []string = []string{
 	".cfignore",
+	".cloudignore",
 	".zipignore",
 }
 
