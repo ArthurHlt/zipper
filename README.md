@@ -74,10 +74,20 @@ Zip from a local directory
 - **Auto detection**: on an existing folder
 - **Valid path**:
   - `/path/to/a/folder`
+  - `/path/to/a/file.zip`
+  - `/path/to/a/file.tar`
+  - `/path/to/a/file.tar.gz`
+  - `/path/to/a/file.tgz`
+  - `/path/to/a/file.tar.bz2`
+  - `/path/to/a/file.jar`
+  - `/path/to/a/file.war`
 - **Signature creation**: Create signature from the first 5kb of the final zip file.
   
-**Tips**: Creating a `.cfignore`, `.zipignore` or/and `.cloudignore` in `.gitignore` style will make 
-zipper ignoring files which match pattern when zipping. 
+**Tips**: 
+- Creating a `.cfignore`, `.zipignore` or/and `.cloudignore` in `.gitignore` style will make 
+zipper ignoring files which match pattern when zipping.
+- Any valid zip content will be interpreted as zip (no need extension on a zip file to recognize it)
+- Any valid `tar`, `tar.gz` or `tar.bz2` files will be converted as zip (no need extension recognize their types)
 
 ### Http
 
@@ -100,6 +110,8 @@ Zip from a `zip` (will be a full http stream in this case), `tar` or `tgz` file.
 - You can pass user and password for basic auth.
 - Excutable file (elf - linux executable, windows executable, macho - osx executable or file containing shebang) 
 will be store with executable permission
+- Any valid zip content will be interpreted as zip (no need extension on a zip file to recognize it)
+- Any valid `tar`, `tar.gz` or `tar.bz2` files will be converted as zip (no need extension recognize their types)
 
 ### Git
 
@@ -110,9 +122,8 @@ Zip from a git repository
 - **Valid path**:
   - `http://github.com/ArthurHlt/zipper.git`
   - `ssh://git@github.com:ArthurHlt/zipper-fixture.git`
-  - `http://github.com/ArthurHlt/zipper.git#branch`
-  - `http://github.com/ArthurHlt/zipper.git#tag`
-  - `http://github.com/ArthurHlt/zipper.git#commit`
+  - `http://github.com/ArthurHlt/zipper.git#branch-or-tag-or-commit`
+  - `ssh://git@github.com:ArthurHlt/zipper-fixture.git#branch-or-tag-or-commit`
 - **Signature creation**: From commit sha1 (use a [bare repo](http://www.saintsjd.com/2011/01/what-is-a-bare-git-repository/) to retrieve it faster).
   
 **Tips**:

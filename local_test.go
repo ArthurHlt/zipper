@@ -6,7 +6,6 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
-	"path"
 	"path/filepath"
 	"runtime"
 	"strings"
@@ -207,20 +206,6 @@ var _ = Describe("LocalHandler", func() {
 			Expect(fmt.Sprintf("%o", reader.File[7].FileInfo().Mode())).To(Equal("766"))
 		})
 
-		It("is a no-op for a zipfile", func() {
-			dir, err := os.Getwd()
-			Expect(err).NotTo(HaveOccurred())
-
-			handler := LocalHandler{}
-			fixture := filepath.Join(dir, "fixtures/applications/example-app.zip")
-			err = handler.ZipFiles(fixture, zipFileLocal)
-			Expect(err).NotTo(HaveOccurred())
-
-			zippedFile, err := os.Open(fixture)
-			Expect(err).NotTo(HaveOccurred())
-			Expect(readFile(zipFileLocal)).To(Equal(readFile(zippedFile)))
-		})
-
 		It("compresses the files", func() {
 			workingDir, err := os.Getwd()
 			Expect(err).NotTo(HaveOccurred())
@@ -253,103 +238,6 @@ var _ = Describe("LocalHandler", func() {
 				err = handler.ZipFiles(emptyDir, zipFileLocal)
 				Expect(err).To(HaveOccurred())
 				Expect(err.Error()).To(ContainSubstring("is empty"))
-			})
-		})
-	})
-
-	Describe("IsZipFile", func() {
-		var (
-			inDir, outDir string
-			handler       LocalHandler
-		)
-
-		AfterEach(func() {
-			os.RemoveAll(inDir)
-			os.RemoveAll(outDir)
-		})
-
-		Context("when given a zip without prefix bytes", func() {
-			BeforeEach(func() {
-				var err error
-				inDir, err = ioutil.TempDir("", "handler-unzip-in")
-				Expect(err).NotTo(HaveOccurred())
-
-				err = ioutil.WriteFile(path.Join(inDir, "file1"), []byte("file-1-contents"), 0664)
-				Expect(err).NotTo(HaveOccurred())
-
-				outDir, err = ioutil.TempDir("", "handler-unzip-out")
-				Expect(err).NotTo(HaveOccurred())
-
-				err = zipit(path.Join(inDir, "/"), path.Join(outDir, "out.zip"), "")
-				Expect(err).NotTo(HaveOccurred())
-
-				handler = LocalHandler{}
-			})
-
-			It("returns true", func() {
-				Expect(handler.IsZipFile(path.Join(outDir, "out.zip"))).To(BeTrue())
-			})
-		})
-
-		Context("when given a zip with prefix bytes", func() {
-			BeforeEach(func() {
-				var err error
-				inDir, err = ioutil.TempDir("", "handler-unzip-in")
-				Expect(err).NotTo(HaveOccurred())
-
-				err = ioutil.WriteFile(path.Join(inDir, "file1"), []byte("file-1-contents"), 0664)
-				Expect(err).NotTo(HaveOccurred())
-
-				outDir, err = ioutil.TempDir("", "handler-unzip-out")
-				Expect(err).NotTo(HaveOccurred())
-
-				err = zipit(path.Join(inDir, "/"), path.Join(outDir, "out.zip"), "prefix-bytes")
-				Expect(err).NotTo(HaveOccurred())
-
-				handler = LocalHandler{}
-			})
-
-			It("returns true", func() {
-				Expect(handler.IsZipFile(path.Join(outDir, "out.zip"))).To(BeTrue())
-			})
-		})
-
-		Context("when given a file that is not a zip", func() {
-			var fileName string
-
-			BeforeEach(func() {
-				f, err := ioutil.TempFile("", "handler-test")
-				Expect(err).NotTo(HaveOccurred())
-
-				fi, err := f.Stat()
-				Expect(err).NotTo(HaveOccurred())
-				fileName = fi.Name()
-			})
-
-			AfterEach(func() {
-				defer os.RemoveAll(fileName)
-			})
-
-			It("returns false", func() {
-				Expect(handler.IsZipFile(fileName)).To(BeFalse())
-			})
-		})
-
-		Context("when given a directory", func() {
-			var dirName string
-
-			BeforeEach(func() {
-				var err error
-				dirName, err = ioutil.TempDir("", "handler-test")
-				Expect(err).NotTo(HaveOccurred())
-			})
-
-			AfterEach(func() {
-				defer os.RemoveAll(dirName)
-			})
-
-			It("returns false", func() {
-				Expect(handler.IsZipFile(dirName)).To(BeFalse())
 			})
 		})
 	})

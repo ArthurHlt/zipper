@@ -21,21 +21,7 @@ func IsWebURL(path string) bool {
 	return strings.HasPrefix(path, "http://") || strings.HasPrefix(path, "https://")
 }
 
-var ZIP_FILE_EXT []string = []string{
-	".zip",
-	".jar",
-	".war",
-}
-var TAR_FILE_EXT []string = []string{
-	".tar",
-}
-var GZIP_FILE_EXT []string = []string{
-	".gz",
-	".gzip",
-}
-var TARGZ_FILE_EXT []string = []string{
-	".tgz",
-}
+
 
 // Create sha1 from a reader by loading in maximum 5kb
 func GetSha1FromReader(reader io.Reader) (string, error) {

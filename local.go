@@ -18,6 +18,31 @@ type LocalHandler struct {
 }
 
 func (h LocalHandler) Zip(src *Source) (ZipReadCloser, error) {
+	stat, err := os.Stat(src.Path)
+	if err != nil {
+		return nil, err
+	}
+	if !stat.IsDir() {
+		processor := NewCompressProcessor(src, func(src *Source) (io.ReadCloser, int64, string, error) {
+			file, err := os.Open(src.Path)
+			if err != nil {
+				return nil, 0, "", err
+			}
+			stat, err := file.Stat()
+			if err != nil {
+				file.Close()
+				return nil, 0, "", err
+			}
+			return file, stat.Size(), src.Path, nil
+		})
+		zipProc, err := processor.ToZip()
+		if err != nil {
+			return nil, err
+		}
+		if zipProc != nil {
+			return zipProc, nil
+		}
+	}
 	path := src.Path
 	zipFile, err := ioutil.TempFile("", "uploads-zipper")
 	if err != nil {
@@ -58,53 +83,17 @@ func (h LocalHandler) Name() string {
 }
 
 func (h LocalHandler) ZipFiles(dirOrZipFilePath string, targetFile *os.File) error {
-	if h.IsZipFile(dirOrZipFilePath) {
-		zipFile, err := os.Open(dirOrZipFilePath)
-		if err != nil {
-			return err
-		}
-		defer zipFile.Close()
-
-		_, err = io.Copy(targetFile, zipFile)
-		if err != nil {
-			return err
-		}
-	} else {
-		err := h.writeZipFile(dirOrZipFilePath, targetFile)
-		if err != nil {
-			return err
-		}
+	err := h.writeZipFile(dirOrZipFilePath, targetFile)
+	if err != nil {
+		return err
 	}
 
-	_, err := targetFile.Seek(0, os.SEEK_SET)
+	_, err = targetFile.Seek(0, os.SEEK_SET)
 	if err != nil {
 		return err
 	}
 
 	return nil
-}
-
-func (h LocalHandler) IsZipFile(name string) bool {
-	f, err := os.Open(name)
-	if err != nil {
-		return false
-	}
-
-	fi, err := f.Stat()
-	if err != nil {
-		return false
-	}
-
-	if fi.IsDir() {
-		return false
-	}
-
-	_, err = zip.OpenReader(name)
-	if err != nil && err == zip.ErrFormat {
-		return h.isZipWithOffsetFileHeaderLocation(name)
-	}
-
-	return err == nil
 }
 
 func (h LocalHandler) GetZipSize(zipFile *os.File) (int64, error) {
