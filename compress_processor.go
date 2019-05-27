@@ -5,7 +5,6 @@ import (
 	"archive/zip"
 	"compress/bzip2"
 	"compress/gzip"
-	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
@@ -52,7 +51,6 @@ func (p CompressProcessor) ToZip() (ZipReadCloser, error) {
 	if err != nil {
 		return nil, err
 	}
-	fmt.Println("zip")
 	isZipFile, err := p.isZipFile(reader, path)
 	if err != nil {
 		return nil, err
