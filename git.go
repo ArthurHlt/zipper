@@ -31,6 +31,7 @@ func NewGitHandler() *GitHandler {
 	client.InstallProtocol("http", githttp.NewClient(customClient))
 	return &GitHandler{customClient}
 }
+
 func (h GitHandler) Zip(src *Source) (ZipReadCloser, error) {
 	h.setHttpClient(src)
 	path := src.Path
@@ -44,7 +45,10 @@ func (h GitHandler) Zip(src *Source) (ZipReadCloser, error) {
 		return nil, err
 	}
 	err = os.RemoveAll(filepath.Join(tmpDir, ".git"))
-	newSrc := NewSource(tmpDir)
+	if err != nil {
+		return nil, err
+	}
+	newSrc := NewSource(tmpDir + gitUtils.SubPath)
 	newSrc.WithContext(src.Context())
 	lh := &LocalHandler{}
 	localFh, err := lh.Zip(newSrc)
@@ -60,11 +64,22 @@ func (h GitHandler) Zip(src *Source) (ZipReadCloser, error) {
 	}
 	return NewZipFile(localFh, localFh.Size(), cleanFunc), nil
 }
+
 func (h GitHandler) makeGitUtils(tmpDir, path string) *GitUtils {
 	u, err := giturls.Parse(path)
 	if err != nil {
 		u, _ = giturls.Parse("ssh://" + path)
 	}
+
+	subPath := ""
+	if strings.Contains(u.Path, ".git/") {
+		subPathSplit := strings.SplitN(u.Path, ".git/", 2)
+		u.Path = subPathSplit[0] + ".git"
+		if len(subPathSplit) == 2 {
+			subPath = "/" + subPathSplit[1]
+		}
+	}
+
 	refName := "master"
 	if u.Fragment != "" {
 		refName = u.Fragment
@@ -79,9 +94,11 @@ func (h GitHandler) makeGitUtils(tmpDir, path string) *GitUtils {
 		Folder:     tmpDir,
 		RefName:    refName,
 		AuthMethod: authMethod,
+		SubPath:    subPath,
 	}
 	return gitUtils
 }
+
 func (h GitHandler) Sha1(src *Source) (string, error) {
 	h.setHttpClient(src)
 	path := src.Path
@@ -93,6 +110,7 @@ func (h GitHandler) Sha1(src *Source) (string, error) {
 	gitUtils := h.makeGitUtils(tmpDir, path)
 	return gitUtils.CommitSha1()
 }
+
 func (h GitHandler) Detect(src *Source) bool {
 	path := src.Path
 	u, err := giturls.Parse(path)
@@ -104,6 +122,7 @@ func (h GitHandler) Detect(src *Source) bool {
 	}
 	return HasExtFile(u.Path, ".git")
 }
+
 func (h *GitHandler) setHttpClient(src *Source) {
 	*h.client = *CtxHttpClient(src)
 }
@@ -117,6 +136,7 @@ type GitUtils struct {
 	Url        string
 	RefName    string
 	AuthMethod transport.AuthMethod
+	SubPath    string
 }
 
 var refTypes []string = []string{"heads", "tags"}

@@ -103,6 +103,29 @@ var _ = Describe("Git", func() {
 				checkZipFile(zipFile, "README.md", "branch.txt")
 			})
 		})
+		Context("When it contains sub path", func() {
+			var previousZipFiles []string
+			BeforeEach(func() {
+				previousZipFiles = filesInZip
+				filesInZip = []string{
+					"bar.txt",
+					"otherDir/",
+					"otherDir/file.txt",
+				}
+			})
+			AfterEach(func() {
+				filesInZip = previousZipFiles
+			})
+			It("should create zip file", func() {
+				src := NewSource(fixtureRepo + "/subDir")
+				SetCtxHttpClient(src, http.DefaultClient)
+				zipFile, err := handler.Zip(src)
+				Expect(err).NotTo(HaveOccurred())
+				defer zipFile.Close()
+
+				checkZipFile(zipFile)
+			})
+		})
 		Context("When is ssh source url", func() {
 			BeforeEach(func() {
 				if os.Getenv("TRAVIS") != "" {
