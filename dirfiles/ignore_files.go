@@ -75,6 +75,7 @@ var defaultIgnoreLines = []string{
 	".zipignore",
 	".cfignore",
 	".gitignore",
+	".cloudignore",
 	".git",
 	".hg",
 	".svn",

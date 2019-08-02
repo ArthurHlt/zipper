@@ -71,6 +71,11 @@ func (h GitHandler) makeGitUtils(tmpDir, path string) *GitUtils {
 		u, _ = giturls.Parse("ssh://" + path)
 	}
 
+	// workaround of a bug when scheme wasn'nt set, fragment is not well parsed
+	if u.Scheme == "ssh" && !strings.HasPrefix(path, "ssh") {
+		u, _ = giturls.Parse("ssh://" + path)
+	}
+
 	subPath := ""
 	if strings.Contains(u.Path, ".git/") {
 		subPathSplit := strings.SplitN(u.Path, ".git/", 2)
@@ -88,6 +93,9 @@ func (h GitHandler) makeGitUtils(tmpDir, path string) *GitUtils {
 	authMethod, _ := createGitAuthMethod(u)
 	if u.Scheme == "ssh" {
 		u.Scheme = ""
+	}
+	if u.RawQuery != "" {
+		u.RawQuery = ""
 	}
 	gitUtils := &GitUtils{
 		Url:        u.String(),
@@ -142,8 +150,15 @@ type GitUtils struct {
 var refTypes []string = []string{"heads", "tags"}
 
 func createGitAuthMethod(uri *url.URL) (transport.AuthMethod, error) {
-	if uri.Scheme == "ssh" {
+	privKeyPath := uri.Query().Get("private-key")
+	passKey := uri.Query().Get("password-key")
+
+	if uri.Scheme == "ssh" && privKeyPath == "" {
 		return ssh.NewSSHAgentAuth(uri.User.Username())
+	}
+
+	if uri.Scheme == "ssh" && privKeyPath != "" {
+		return ssh.NewPublicKeysFromFile(uri.User.Username(), privKeyPath, passKey)
 	}
 	if uri.User == nil || uri.User.Username() == "" {
 		return nil, nil

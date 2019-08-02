@@ -1,6 +1,7 @@
 package zipper_test
 
 import (
+	"fmt"
 	. "github.com/ArthurHlt/zipper"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -132,42 +133,91 @@ var _ = Describe("Git", func() {
 					Skip("This can run only locally with github ssh key")
 				}
 			})
-			It("should create zip file", func() {
-				src := NewSource(fixtureRepoSsh)
-				SetCtxHttpClient(src, http.DefaultClient)
-				zipFile, err := handler.Zip(src)
-				Expect(err).NotTo(HaveOccurred())
-				defer zipFile.Close()
+			Context("use ssh agent", func() {
+				It("should create zip file", func() {
+					src := NewSource(fixtureRepoSsh)
+					SetCtxHttpClient(src, http.DefaultClient)
+					zipFile, err := handler.Zip(src)
+					Expect(err).NotTo(HaveOccurred())
+					defer zipFile.Close()
 
-				checkZipFile(zipFile, "README.md")
-			})
-			It("should create zip file from branch", func() {
-				src := NewSource(fixtureRepoSsh + "#test-branch")
-				SetCtxHttpClient(src, http.DefaultClient)
-				zipFile, err := handler.Zip(src)
-				Expect(err).NotTo(HaveOccurred())
-				defer zipFile.Close()
+					checkZipFile(zipFile, "README.md")
+				})
+				It("should create zip file from branch", func() {
+					src := NewSource(fixtureRepoSsh + "#test-branch")
+					SetCtxHttpClient(src, http.DefaultClient)
+					zipFile, err := handler.Zip(src)
+					Expect(err).NotTo(HaveOccurred())
+					defer zipFile.Close()
 
-				checkZipFile(zipFile, "README.md", "branch.txt")
-			})
-			It("should create zip file from tag", func() {
-				src := NewSource(fixtureRepoSsh + "#v0.0.1")
-				SetCtxHttpClient(src, http.DefaultClient)
-				zipFile, err := handler.Zip(src)
-				Expect(err).NotTo(HaveOccurred())
-				defer zipFile.Close()
+					checkZipFile(zipFile, "README.md", "branch.txt")
+				})
+				It("should create zip file from tag", func() {
+					src := NewSource(fixtureRepoSsh + "#v0.0.1")
+					SetCtxHttpClient(src, http.DefaultClient)
+					zipFile, err := handler.Zip(src)
+					Expect(err).NotTo(HaveOccurred())
+					defer zipFile.Close()
 
-				checkZipFile(zipFile, "README.md", "branch.txt")
-			})
-			It("should create zip file from commit", func() {
-				src := NewSource(fixtureRepoSsh + "#c0bfbc199a7ea040712461072c52567fe5361238")
-				SetCtxHttpClient(src, http.DefaultClient)
-				zipFile, err := handler.Zip(src)
-				Expect(err).NotTo(HaveOccurred())
-				defer zipFile.Close()
+					checkZipFile(zipFile, "README.md", "branch.txt")
+				})
+				It("should create zip file from commit", func() {
+					src := NewSource(fixtureRepoSsh + "#c0bfbc199a7ea040712461072c52567fe5361238")
+					SetCtxHttpClient(src, http.DefaultClient)
+					zipFile, err := handler.Zip(src)
+					Expect(err).NotTo(HaveOccurred())
+					defer zipFile.Close()
 
-				checkZipFile(zipFile, "README.md", "branch.txt")
+					checkZipFile(zipFile, "README.md", "branch.txt")
+				})
 			})
+			Context("use private key", func() {
+				var fixtureRepoSshWithKey string
+				BeforeEach(func() {
+					privKeyPath := os.Getenv("ZIPPER_PRIV_KEY_TEST")
+					if privKeyPath == "" {
+						Skip("Private key path must be set with ZIPPER_PRIV_KEY_TEST env var")
+					}
+					fixtureRepoSshWithKey = fmt.Sprintf("%s?private-key=%s", fixtureRepoSsh, privKeyPath)
+				})
+				It("should create zip file", func() {
+					src := NewSource(fixtureRepoSshWithKey)
+					SetCtxHttpClient(src, http.DefaultClient)
+					zipFile, err := handler.Zip(src)
+					Expect(err).NotTo(HaveOccurred())
+					defer zipFile.Close()
+
+					checkZipFile(zipFile, "README.md")
+				})
+				It("should create zip file from branch", func() {
+					src := NewSource(fixtureRepoSshWithKey + "#test-branch")
+					SetCtxHttpClient(src, http.DefaultClient)
+					zipFile, err := handler.Zip(src)
+					Expect(err).NotTo(HaveOccurred())
+					defer zipFile.Close()
+
+					checkZipFile(zipFile, "README.md", "branch.txt")
+				})
+				It("should create zip file from tag", func() {
+					src := NewSource(fixtureRepoSshWithKey + "#v0.0.1")
+					SetCtxHttpClient(src, http.DefaultClient)
+					zipFile, err := handler.Zip(src)
+					Expect(err).NotTo(HaveOccurred())
+					defer zipFile.Close()
+
+					checkZipFile(zipFile, "README.md", "branch.txt")
+				})
+				It("should create zip file from commit", func() {
+					src := NewSource(fixtureRepoSshWithKey + "#c0bfbc199a7ea040712461072c52567fe5361238")
+					SetCtxHttpClient(src, http.DefaultClient)
+					zipFile, err := handler.Zip(src)
+					Expect(err).NotTo(HaveOccurred())
+					defer zipFile.Close()
+
+					checkZipFile(zipFile, "README.md", "branch.txt")
+				})
+			})
+
 		})
 	})
 })

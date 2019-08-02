@@ -123,6 +123,7 @@ Zip from a git repository
   - `http://github.com/ArthurHlt/zipper.git`
   - `ssh://git@github.com:ArthurHlt/zipper-fixture.git`
   - `ssh://git@github.com:ArthurHlt/zipper-fixture.git/folder/in/repo`
+  - `ssh://git@github.com:ArthurHlt/zipper-fixture.git/folder/in/repo?private-key=/pass/to/pem/key&password-key=`
   - `http://github.com/ArthurHlt/zipper.git#branch-or-tag-or-commit`
   - `ssh://git@github.com:ArthurHlt/zipper-fixture.git#branch-or-tag-or-commit`
 - **Signature creation**: From commit sha1 (use a [bare repo](http://www.saintsjd.com/2011/01/what-is-a-bare-git-repository/) to retrieve it faster).
