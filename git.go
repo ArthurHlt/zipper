@@ -14,12 +14,15 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 )
 
 type GitHandler struct {
 	client *http.Client
 }
+
+var scpSyntax = regexp.MustCompile(`^([a-zA-Z0-9_]+@)?([a-zA-Z0-9._-]+):(.*)$`)
 
 func NewGitHandler() *GitHandler {
 	customClient := &http.Client{
@@ -91,14 +94,16 @@ func (h GitHandler) makeGitUtils(tmpDir, path string) *GitUtils {
 		u.Fragment = ""
 	}
 	authMethod, _ := createGitAuthMethod(u)
-	if u.Scheme == "ssh" {
-		u.Scheme = ""
-	}
 	if u.RawQuery != "" {
 		u.RawQuery = ""
 	}
+	finalUrl := u.String()
+	if u.Scheme == "ssh" && scpSyntax.MatchString(u.String()) {
+		u.Scheme = ""
+		finalUrl = strings.TrimPrefix(u.String(), "//")
+	}
 	gitUtils := &GitUtils{
-		Url:        u.String(),
+		Url:        finalUrl,
 		Folder:     tmpDir,
 		RefName:    refName,
 		AuthMethod: authMethod,
