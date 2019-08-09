@@ -98,7 +98,7 @@ func (h GitHandler) makeGitUtils(tmpDir, path string) *GitUtils {
 		u.RawQuery = ""
 	}
 	finalUrl := u.String()
-	if u.Scheme == "ssh" && scpSyntax.MatchString(u.String()) {
+	if u.Scheme == "ssh" && scpSyntax.MatchString(strings.TrimPrefix(u.String(), "ssh://")) {
 		u.Scheme = ""
 		finalUrl = strings.TrimPrefix(u.String(), "//")
 	}
